@@ -27,5 +27,6 @@ def main() -> None:
         print(f"Unexpected error: {e}")
         sys.exit(1)
 
+
 if __name__ == "__main__":
     main()

@@ -48,7 +48,6 @@ class MazeGenerator:
         self.blocked_cells: set = set()
         self.solution_path: list = []
         self.visited: set[tuple[int, int]] = set()
-        
 
         random.seed(config.seed)
         self._init_grid()
@@ -78,12 +77,12 @@ class MazeGenerator:
 
         if (x < 0 or x >= self.width or y < 0 or y >= self.height):
             return
-        
-        if not direction in DIRECTIONS:
+
+        if direction not in DIRECTIONS:
             return
-        
+
         if (x, y) in self.blocked_cells:
-            return 
+            return
 
         self.grid[y][x] = self.grid[y][x] & ~direction
 
@@ -97,57 +96,59 @@ class MazeGenerator:
                 self.grid[ny][nx] = self.grid[ny][nx] & ~opposite
 
     def generate(self) -> None:
-        
+
         self._place_42_pattern()
-        
+
         visited: set = set()
         stack: list = [self.config.entry]
 
         visited.add(self.config.entry)
-        
+
         while stack:
             cx, cy = stack[-1]
             random_directions: list = list(DIRECTIONS.keys())
             random.shuffle(random_directions)
-            
+
             find = False
-            
-            
+
             for direction in random_directions:
                 (dx, dy) = DIRECTIONS[direction]
                 nx = cx + dx
                 ny = cy + dy
-                
-                if (nx, ny) not in visited and (nx, ny) not in self.blocked_cells and 0 <= nx < self.width and 0 <= ny < self.height:
-                    
+
+                if ((nx, ny) not in visited and
+                        (nx, ny) not in self.blocked_cells
+                        and 0 <= nx < self.width and 0 <= ny < self.height):
+
                     if self._is_valid_open(cx, cy, nx, ny, visited):
                         self.remove_wall(cx, cy, direction)
                         visited.add((nx, ny))
                         stack.append((nx, ny))
                         find = True
                         break
-                    
+
             if not find:
                 stack.pop()
 
-        self.visited = visited        
+        self.visited = visited
         if not self.config.perfect:
             self._open_extra_walls()
-            
+
     def _is_valid_open(self, cx, cy, nx, ny, visited) -> bool:
-        
+
         open_neighbors = 0
-        
+
         for direction, (dx, dy) in DIRECTIONS.items():
             around_nx = nx + dx
             around_ny = ny + dy
-            
+
             if 0 <= around_nx < self.width and 0 <= around_ny < self.height:
-                if (around_nx, around_ny) in visited and (around_nx, around_ny) != (cx, cy):
+                if ((around_nx, around_ny) in visited
+                        and (around_nx, around_ny) != (cx, cy)):
                     open_neighbors += 1
 
         return open_neighbors < 2
-    
+
     def _open_extra_walls(self) -> None:
 
         walls_to_open = (self.width * self.height) // 10
@@ -158,66 +159,66 @@ class MazeGenerator:
             for cx in range(self.width - 1):
                 if (cx, cy) in self.blocked_cells:
                     continue
-                
+
                 for direction in [EAST, SOUTH]:
                     (dx, dy) = DIRECTIONS[direction]
                     nx = cx + dx
                     ny = cy + dy
-                    
+
                     if nx >= self.width or ny >= self.height:
                         continue
                     if (nx, ny) in self.blocked_cells:
                         continue
-                    
+
                     if self.grid[cy][cx] & direction:
                         candidates.append((cx, cy, direction))
-        
+
         random.shuffle(candidates)
-        
+
         opened = 0
         for (cx, cy, direction) in candidates:
-            
+
             if opened >= walls_to_open:
                 break
-            
+
             (dx, dy) = DIRECTIONS[direction]
             nx = cx + dx
             ny = cy + dy
-            
+
             if self._is_valid_open(cx, cy, nx, ny, self.visited):
                 self.remove_wall(cx, cy, direction)
                 opened += 1
-                
+
     def _bfs_shortest_path(self) -> list[str]:
-        
+
         queue = deque([(self.config.entry, [])])
         visited = {self.config.entry}
-        
+
         while queue:
             (cx, cy), path = queue.popleft()
-            
+
             if (cx, cy) == self.config.exit_coord:
                 return path
-            
+
             for direction, (dx, dy) in DIRECTIONS.items():
                 nx = cx + dx
                 ny = cy + dy
-                
+
                 if nx < 0 or nx >= self.width:
                     continue
                 if ny < 0 or ny >= self.height:
                     continue
                 if (nx, ny) in visited:
                     continue
-                
+
                 if self.grid[cy][cx] & direction:
                     continue
-                
+
                 visited.add((nx, ny))
                 queue.append(((nx, ny), path + [DIR_LETTER[direction]]))
-                
+
         return []
-    
+
     def write_output(self) -> None:
 
         self.solution_path = self._bfs_shortest_path()
@@ -230,11 +231,12 @@ class MazeGenerator:
                     file.write(hex(self.grid[y][x])[2:].upper())
                 file.write("\n")
             file.write("\n")
-            
+
             file.write(f"{self.config.entry[0]},{self.config.entry[1]}\n")
-            file.write(f"{self.config.exit_coord[0]},{self.config.exit_coord[1]}\n")
+            file.write(
+                f"{self.config.exit_coord[0]},{self.config.exit_coord[1]}\n")
             file.write(f"{path_str}\n")
-            
+
     def display(self) -> None:
         from mlx_renderer.maze_visualizer import MazeVisualizer
         visualizer = MazeVisualizer(self)

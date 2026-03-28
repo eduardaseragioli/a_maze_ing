@@ -14,7 +14,7 @@ def parse_config(filepath: str) -> MazeConfig:
             line = line.strip()
             if not line or line.startswith('#'):
                 continue
-            if not '=' in line:
+            if '=' not in line:
                 raise ValueError("Invalid syntax")
 
             key, value = line.split('=', 1)
@@ -25,7 +25,7 @@ def parse_config(filepath: str) -> MazeConfig:
     keys: list = ["WIDTH", "HEIGHT", "ENTRY",
                   "EXIT", "OUTPUT_FILE", "PERFECT"]
     for key in keys:
-        if not key in raw:
+        if key not in raw:
             raise ValueError(f"Missing required key: {key}")
     try:
         width = int(raw["WIDTH"])
@@ -63,7 +63,8 @@ def parse_config(filepath: str) -> MazeConfig:
         exit_key = (int(x), int(y))
     except ValueError:
         raise ValueError(f"EXIT must be an integer, got: {exit_raw}")
-    if exit_key[0] >= width or exit_key[1] >= height or exit_key[0] < 0 or exit_key[1] < 0:
+    if (exit_key[0] >= width or exit_key[1] >= height or
+            exit_key[0] < 0 or exit_key[1] < 0):
         raise ValueError("Exit out of bounds")
 
     if entry == exit_key:
