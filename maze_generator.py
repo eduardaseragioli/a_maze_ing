@@ -37,37 +37,55 @@ class MazeGenerator:
         self.config = config
         self.width = config.width
         self.height = config.height
-        self.grid: list[self.width: int, self.height: int] = []
+        self.grid: list[list[int]] = []
         self.blocked_cells = set()
         self.solution_path: list = []
 
         random.seed(config.seed)
         self._init_grid()
 
-    def __init__grid(self):
-        for y in range(0, self.height -1):
-            for x in range(0, self.width - 1):
-                self.grid[y][x] = 1111
+    def _init_grid(self) -> None:
+        for _ in range(self.height):
+            row: list = []
+            for _ in range(self.width):
+                row.append(0b1111)
+            self.grid.append(row)
 
     def place_42_pattern(self) -> bool:
-        center_x = self.width / 2 - 3
-        center_y = self.height / 2 - 3
+        center_x = self.width // 2 - 3
+        center_y = self.height // 2 - 3
 
-        for (dx, dy) in pattern_42:
+        for (dx, dy) in PATTERN_42:
             x = center_x + dx
             y = center_y + dy
             if (x < 0 or x >= self.width or y < 0 or y >= self.height):
                 print("Warning: Maze too small for 42 pattern!")
                 return False
-            self.grid[y][x] = 1111
+            self.grid[y][x] = 0b1111
             self.blocked_cells.add((x, y))
         return True
 
     def remove_wall(self, x, y, direction) -> None:
+
+        if (x < 0 or x >= self.width or y < 0 or y >= self.height):
+            return
+        
+        if not direction in DIRECTIONS:
+            return
+        
+        if (x, y) in self.blocked_cells:
+            return 
+
         self.grid[y][x] = self.grid[y][x] and (not direction)
 
-        (dy, dx) = DIRECTIONS[direction]
+        (dx, dy) = DIRECTIONS[direction]
         nx = x + dx
         ny = y + dy
 
-        if (0)
+        if (0 <= nx < self.width and 0 <= ny < self.height):
+            if not (nx, ny) in self.blocked_cells:
+                opposite = OPPOSITE[direction]
+                self.grid[ny][nx] = self.grid[ny][nx] and (not opposite)
+
+        def generate(self) -> None:
+            
