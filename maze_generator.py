@@ -238,6 +238,6 @@ class MazeGenerator:
             file.write(f"{path_str}\n")
 
     def display(self) -> None:
-        from mlx_renderer.maze_visualizer import MazeVisualizer
+        from maze_visualizer import MazeVisualizer
         visualizer = MazeVisualizer(self)
         visualizer.run()
