@@ -1,6 +1,9 @@
+import random
+import os
 from maze_generator import MazeGenerator
 from maze_config import MazeConfig
-import ctypes
+from renderer import Renderer
+
 
 try:
     import sys
@@ -9,242 +12,192 @@ try:
 except ImportError:
     print("Error: MLX library not found.")
 
-CELL_SIZE = 20
-WALL_THICK = 2
-MENU_HEIGHT = 20
-
-COLOUR_BKG = 0x330033  
-COLOUR_WALL_PRESETS = [0xFFFFFF, 0xFF6B9D, 0xC44569, 0xF8B739, 0x00D9FF]
-COLOUR_PATH = 0x00FF00  
-COLOUR_ENTRY = 0x0000FF  
-COLOUR_EXIT = 0xFF0000  
-COLOUR_42 = 0xFFFF00  
-COLOUR_TEXT = 0xFFFFFF  
-
 NORTH = 0b0001
 EAST = 0b0010
 SOUTH = 0b0100
 WEST = 0b1000
 
-DIR_MAP = {
+DIRECTIONS = {
     'N': (0, -1),
-    'E': (1,  0),
-    'S': (0,  1),
+    'E': (1, 0),
+    'S': (0, 1),
     'W': (-1, 0),
 }
 
+# Colors
+COLOR_BG = 0x0B1020
+COLOR_FLOOR = 0x151B2D
+COLOR_WALL = 0x7C3AED
+COLOR_PATH = 0xFACC15
+COLOR_ENTRY = 0x22C55E
+COLOR_EXIT = 0xEF4444
+COLOR_42 = 0x2563EB
 
-class MazeVisualizer:
-    
-    def __init__(self, generator: MazeGenerator):
-        self.generator = generator
+TILE_SIZE = 20
+
+
+class MazeVisualizer(Renderer):
+
+    def __init__(self, generator: MazeGenerator) -> None:
+
+        if Mlx is None:
+            raise ImportError("MLX library not available")
+
+        self.gen = generator
         self.show_path = False
-        self.colour_index = 0
-        self.wall_colour = 0xFFFFFF
-        self.window_width = (generator.width * CELL_SIZE + WALL_THICK)
-        self.window_height = (generator.height * CELL_SIZE + WALL_THICK + MENU_HEIGHT)
-        
+        self.wall_color = COLOR_WALL
+        self.path_cells = self._build_path_cells()
+
         self.mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
-        self.win_ptr = self.mlx.mlx_new_window(
-            self.mlx_ptr, self.window_width, self.window_height, "A_Maze_ing")
-        self.img_ptr = self.mlx.mlx_new_image(
-            self.mlx_ptr, self.window_width, self.window_height)
-        
-        self.mlx.mlx_func.mlx_get_data_addr.argtypes = [
-            ctypes.c_void_p,
-            ctypes.POINTER(ctypes.c_uint),
-            ctypes.POINTER(ctypes.c_uint),
-            ctypes.POINTER(ctypes.c_uint)
-        ]
-        self.mlx.mlx_func.mlx_get_data_addr.restype = ctypes.POINTER(
-            ctypes.c_char)
 
-        bpp = ctypes.c_uint()
-        line_size = ctypes.c_uint()
-        endian = ctypes.c_uint()
-        data_ptr = self.mlx.mlx_func.mlx_get_data_addr(
-            self.img_ptr, ctypes.byref(bpp), ctypes.byref(line_size),
-            ctypes.byref(endian))
+        self.tile_size = TILE_SIZE
+        self.win_width = self.gen.width * self.tile_size
+        self.win_height = self.gen.height * self.tile_size
 
-        self.bpp = bpp.value
-        self.line_size = line_size.value
-        self.endian = endian.value
+        self.win = self.mlx.mlx_new_window(
+            self.mlx_ptr, self.win_width, self.win_height, "A-Maze-ing"
+        )
 
-        total_bytes = self.line_size * self.window_height
-        self.buffer = (ctypes.c_char * total_bytes).from_address(
-            ctypes.addressof(data_ptr.contents))
-        
-        self.path_cells: set[tuple[int, int]] = self._build_path_cells()
-        
-    def run(self):
-        self._draw_all()
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
-        self.mlx.mlx_loop_hook(self.mlx_ptr, self._on_loop, None)
-        self.mlx.mlx_key_hook(self.win_ptr, self._on_key, None)
-        self.mlx.mlx_hook(self.win_ptr, 17, 0, self._on_close, None)
-        self.mlx.mlx_loop(self.mlx_ptr)
+        self.img = self.mlx.mlx_new_image(
+            self.mlx_ptr, self.win_width, self.win_height
+        )
 
-    def _on_loop(self, param) -> int:
-        self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr, self.win_ptr, self.img_ptr, 0, 0)
-        return 0
+        addr_info = self.mlx.mlx_get_data_addr(self.img)
+        self.img_data = addr_info[0]
+        self.bpp = addr_info[1]
+        self.line_size = addr_info[2]
 
-    def _on_key(self, keycode, param):
-        KEY_1 = 49
-        KEY_2 = 50
-        KEY_3 = 51
-        KEY_4 = 52
-        KEY_ESC = 65307
-        KEY_Q = 113
-        
-        if keycode == KEY_1:
-            self._regenerate()
-            
-        elif keycode == KEY_2:
-            self.colour_index = (self.colour_index + 1) % len(COLOUR_WALL_PRESETS)
-            self.wall_colour = COLOUR_WALL_PRESETS[self.colour_index]
-            self._draw_all()
-            
-        elif keycode == KEY_3:
-            self.show_path = not self.show_path
-            self._draw_all()
-
-        elif keycode in (KEY_4, KEY_ESC, KEY_Q):
-            self.mlx.mlx_loop_exit(self.mlx_ptr)
-
-        return 0
-
-    def _on_close(self, param):
-        self.mlx.mlx_loop_exit(self.mlx_ptr)
-        return 0
-        
-    def _build_path_cells(self) -> set[tuple[int,int]]:
+    def _build_path_cells(self) -> set[tuple[int, int]]:
         cells: set[tuple[int, int]] = set()
-        
-        cx, cy = self.generator.config.entry
-        for letter in self.generator.solution_path:
-            dx, dy = DIR_MAP[letter]
+        cx, cy = self.gen.config.entry
+
+        for letter in self.gen.solution_path:
+            if letter not in DIRECTIONS:
+                continue
+            dx, dy = DIRECTIONS[letter]
             cx += dx
             cy += dy
             cells.add((cx, cy))
-        return cells
-    
-    def _draw_all(self) -> None:
-        self._fill_rect(
-            0, 0, self.window_width, self.window_height, COLOUR_BKG)
 
-        for y in range(self.generator.height):
-            for x in range(self.generator.width):
+        return cells
+
+    def render(self) -> None:
+        self._fill_rect(0, 0, self.win_width, self.win_height, COLOR_BG)
+
+        for y in range(self.gen.height):
+            for x in range(self.gen.width):
                 self._draw_cell(x, y)
 
-        self._draw_menu()
+        self.mlx.mlx_put_image_to_window(
+            self.mlx_ptr, self.win, self.img, 0, 0
+        )
 
-    def _draw_cell(self, x, y):
-        wx = x * CELL_SIZE
-        wy = y * CELL_SIZE + MENU_HEIGHT
-        
-        px = wx + WALL_THICK
-        py = wy + WALL_THICK
-        inner = CELL_SIZE - WALL_THICK * 2
-        
-        if (x, y) in self.generator.blocked_cells:
-            colour = COLOUR_42
-        elif (x, y) == self.generator.config.entry:
-            colour = COLOUR_ENTRY
-        elif (x, y) == self.generator.config.exit_coord:
-            colour = COLOUR_EXIT
+    def _draw_cell(self, x: int, y: int) -> None:
+
+        cell_val = self.gen.grid[y][x]
+
+        if (x, y) in self.gen.blocked_cells:
+            interior_color = COLOR_42
+        elif (x, y) == self.gen.config.entry:
+            interior_color = COLOR_ENTRY
+        elif (x, y) == self.gen.config.exit_coord:
+            interior_color = COLOR_EXIT
         elif self.show_path and (x, y) in self.path_cells:
-            colour = COLOUR_PATH
+            interior_color = COLOR_PATH
         else:
-            colour = COLOUR_BKG
-        
-        self._fill_rect(px, py, inner, inner, colour)
+            interior_color = COLOR_FLOOR
 
-        cell_value = self.generator.grid[y][x]
-        
-        if cell_value & NORTH:
-            self._fill_rect(
-                wx, wy, CELL_SIZE, WALL_THICK, self.wall_colour)
-        
-        if cell_value & SOUTH:
-            self._fill_rect(
-                wx, wy + CELL_SIZE - WALL_THICK, CELL_SIZE,
-                WALL_THICK, self.wall_colour)
-
-        if cell_value & WEST:
-            self._fill_rect(
-                wx, wy, WALL_THICK, CELL_SIZE, self.wall_colour)
-
-        if cell_value & EAST:
-            self._fill_rect(
-                wx + CELL_SIZE - WALL_THICK, wy, WALL_THICK,
-                CELL_SIZE, self.wall_colour)
-
-    def _put_pixel(self, x, y, colour) -> None:
-        if x < 0 or x >= self.window_width:
-            return
-        if y < 0 or y >= self.window_height:
-            return
-        bytes_per_pixel = self.bpp // 8
-        offset = y * self.line_size + x * bytes_per_pixel
-
-        r = (colour >> 16) & 0xFF
-        g = (colour >> 8) & 0xFF
-        b = colour & 0xFF
-
-        self.buffer[offset] = bytes([b])[0:1]
-        self.buffer[offset + 1] = bytes([g])[0:1]
-        self.buffer[offset + 2] = bytes([r])[0:1]
-            
-    def _fill_rect(self, px, py, width, height, colour) -> None:
-        """Desenha um retângulo preenchido de forma otimizada"""
-        bytes_per_pixel = self.bpp // 8
-        r = (colour >> 16) & 0xFF
-        g = (colour >> 8) & 0xFF
-        b = colour & 0xFF
-
-        b_byte = bytes([b])[0:1]
-        g_byte = bytes([g])[0:1]
-        r_byte = bytes([r])[0:1]
-
-        for y in range(py, py + height):
-            if y < 0 or y >= self.window_height:
-                continue
-            for x in range(px, px + width):
-                if x < 0 or x >= self.window_width:
-                    continue
-                offset = y * self.line_size + x * bytes_per_pixel
-                if offset + 2 < len(self.buffer):
-                    self.buffer[offset] = b_byte
-                    self.buffer[offset + 1] = g_byte
-                    self.buffer[offset + 2] = r_byte
-
-                
-    def _draw_menu(self) -> None:
-        self.mlx.mlx_string_put(
-            self.mlx_ptr, self.win_ptr,
-            4, 4,
-            COLOUR_TEXT,
-            "1:Regen | 2:Colour | 3:Path | ESC:Quit"
+        interior_margin = 2
+        self._fill_rect(
+            x * self.tile_size + interior_margin,
+            y * self.tile_size + interior_margin,
+            self.tile_size - interior_margin * 2,
+            self.tile_size - interior_margin * 2,
+            interior_color,
         )
-        
+
+        wall_thickness = 1
+
+        if cell_val & NORTH:
+            self._fill_rect(
+                x * self.tile_size,
+                y * self.tile_size,
+                self.tile_size,
+                wall_thickness,
+                self.wall_color,
+            )
+
+        if cell_val & SOUTH:
+            self._fill_rect(
+                x * self.tile_size,
+                y * self.tile_size + self.tile_size - wall_thickness,
+                self.tile_size,
+                wall_thickness,
+                self.wall_color,
+            )
+
+        if cell_val & WEST:
+            self._fill_rect(
+                x * self.tile_size,
+                y * self.tile_size,
+                wall_thickness,
+                self.tile_size,
+                self.wall_color,
+            )
+
+        if cell_val & EAST:
+            self._fill_rect(
+                x * self.tile_size + self.tile_size - wall_thickness,
+                y * self.tile_size,
+                wall_thickness,
+                self.tile_size,
+                self.wall_color,
+            )
+
+    def _on_key(self, keycode: int, param) -> int:
+        if keycode == 65307:
+            os._exit(0)
+        elif keycode == 49:
+            self._regenerate()
+        elif keycode == 50:
+            self.show_path = not self.show_path
+            self.render()
+        elif keycode == 51:
+            self.wall_color = self._random_color()
+            self.render()
+
+        return 0
+
+    def _on_close(self, param) -> int:
+        os._exit(0)
+
     def _regenerate(self) -> None:
-        import random
-        old = self.generator.config
+        old_config = self.gen.config
         new_config = MazeConfig(
-            width = old.width,
-            height = old.height,
-            entry = old.entry,
-            exit_coord = old.exit_coord,
-            output_file = old.output_file,
-            perfect = old.perfect,
-            seed = random.randint(0, 2**32)
+            width=old_config.width,
+            height=old_config.height,
+            entry=old_config.entry,
+            exit_coord=old_config.exit_coord,
+            output_file=old_config.output_file,
+            perfect=old_config.perfect,
+            seed=random.randint(0, 2**32),
         )
+
         new_gen = MazeGenerator(new_config)
         new_gen.generate()
         new_gen.write_output()
-        self.generator  = new_gen
+
+        self.gen = new_gen
         self.path_cells = self._build_path_cells()
-        self._draw_all()
+        self.show_path = False
+
+        self.render()
+
+    def run(self) -> None:
+        self.render()
+
+        self.mlx.mlx_key_hook(self.win, self._on_key, None)
+        self.mlx.mlx_hook(self.win, 17, 0, self._on_close, None)
+
+        self.mlx.mlx_loop(self.mlx_ptr)
