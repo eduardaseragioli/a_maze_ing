@@ -1,6 +1,22 @@
 import os
 import random
 from maze_config import MazeConfig
+from constants import PATTERN_42
+
+
+def _get_blocked_cells(width: int, height: int) -> set[tuple[int, int]]:
+    """Calculate which cells are blocked by the 42 pattern."""
+    center_x = width // 2 - 3
+    center_y = height // 2 - 3
+    blocked: set[tuple[int, int]] = set()
+
+    for (dx, dy) in PATTERN_42:
+        x = center_x + dx
+        y = center_y + dy
+        if 0 <= x < width and 0 <= y < height:
+            blocked.add((x, y))
+
+    return blocked
 
 
 def parse_config(filepath: str) -> MazeConfig:
@@ -55,6 +71,13 @@ def parse_config(filepath: str) -> MazeConfig:
     if entry[0] >= width or entry[1] >= height or entry[0] < 0 or entry[1] < 0:
         raise ValueError("Entry out of bounds")
 
+    # Validate that ENTRY is not in blocked cells (42 pattern)
+    blocked_cells = _get_blocked_cells(width, height)
+    if entry in blocked_cells:
+        raise ValueError(
+            f"ENTRY coordinate {entry} cannot be inside the 42 pattern"
+        )
+
     exit_raw = raw["EXIT"]
     if "," not in exit_raw:
         raise ValueError("Exit must be in format x,y")
@@ -69,6 +92,13 @@ def parse_config(filepath: str) -> MazeConfig:
 
     if entry == exit_key:
         raise ValueError("Entry and Exit must be different values")
+
+    # Validate that EXIT is not in blocked cells (42 pattern)
+    blocked_cells = _get_blocked_cells(width, height)
+    if exit_key in blocked_cells:
+        raise ValueError(
+            f"EXIT coordinate {exit_key} cannot be inside the 42 pattern"
+        )
 
     output_file = raw["OUTPUT_FILE"]
 

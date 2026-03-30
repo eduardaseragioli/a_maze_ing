@@ -1,42 +1,10 @@
 import random
 from collections import deque
 from maze_config import MazeConfig
-
-NORTH = 0b0001
-EAST = 0b0010
-SOUTH = 0b0100
-WEST = 0b1000
-
-OPPOSITE: dict[int, int] = {
-    NORTH: SOUTH,
-    SOUTH: NORTH,
-    EAST: WEST,
-    WEST: EAST
-}
-
-DIRECTIONS: dict[int, tuple[int, int]] = {
-    NORTH: (0, -1),
-    EAST: (1, 0),
-    SOUTH: (0, 1),
-    WEST: (-1, 0)
-}
-
-DIR_LETTER = {
-    NORTH: "N",
-    EAST:  "E",
-    SOUTH: "S",
-    WEST:  "W"
-}
-
-PATTERN_42: list[tuple[int, int]] = [
-    (0, 0), (0, 1), (0, 2),
-    (1, 2),
-    (2, 0), (2, 1), (2, 2), (2, 3), (2, 4),
-    (4, 0), (5, 0), (6, 0),
-    (6, 1), (6, 2),
-    (5, 2), (4, 2),
-    (4, 3), (4, 4), (5, 4), (6, 4),
-]
+from constants import (
+    NORTH, EAST, SOUTH, WEST,
+    OPPOSITE, DIRECTIONS, DIR_LETTER, PATTERN_42
+)
 
 
 class MazeGenerator:

@@ -3,7 +3,12 @@ import os
 from maze_generator import MazeGenerator
 from maze_config import MazeConfig
 from renderer import Renderer
-
+from constants import (
+    NORTH, EAST, SOUTH, WEST,
+    COLOR_BG, COLOR_FLOOR, COLOR_WALL, COLOR_PATH,
+    COLOR_ENTRY, COLOR_EXIT, COLOR_42, TILE_SIZE,
+    DIRECTIONS_BY_LETTER
+)
 
 try:
     import sys
@@ -11,29 +16,7 @@ try:
     from mlx.mlx import Mlx
 except ImportError:
     print("Error: MLX library not found.")
-
-NORTH = 0b0001
-EAST = 0b0010
-SOUTH = 0b0100
-WEST = 0b1000
-
-DIRECTIONS = {
-    'N': (0, -1),
-    'E': (1, 0),
-    'S': (0, 1),
-    'W': (-1, 0),
-}
-
-# Colors
-COLOR_BG = 0x0B1020
-COLOR_FLOOR = 0x151B2D
-COLOR_WALL = 0x7C3AED
-COLOR_PATH = 0xFACC15
-COLOR_ENTRY = 0x22C55E
-COLOR_EXIT = 0xEF4444
-COLOR_42 = 0x2563EB
-
-TILE_SIZE = 20
+    Mlx = None
 
 
 class MazeVisualizer(Renderer):
@@ -50,10 +33,11 @@ class MazeVisualizer(Renderer):
 
         self.mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
-
+        MENU_HEIGHT = 40
         self.tile_size = TILE_SIZE
         self.win_width = self.gen.width * self.tile_size
-        self.win_height = self.gen.height * self.tile_size
+
+        self.win_height = self.gen.height * self.tile_size + MENU_HEIGHT
 
         self.win = self.mlx.mlx_new_window(
             self.mlx_ptr, self.win_width, self.win_height, "A-Maze-ing"
@@ -68,19 +52,28 @@ class MazeVisualizer(Renderer):
         self.bpp = addr_info[1]
         self.line_size = addr_info[2]
 
+
     def _build_path_cells(self) -> set[tuple[int, int]]:
         cells: set[tuple[int, int]] = set()
         cx, cy = self.gen.config.entry
 
         for letter in self.gen.solution_path:
-            if letter not in DIRECTIONS:
+            if letter not in DIRECTIONS_BY_LETTER:
                 continue
-            dx, dy = DIRECTIONS[letter]
+            dx, dy = DIRECTIONS_BY_LETTER[letter]
             cx += dx
             cy += dy
             cells.add((cx, cy))
 
         return cells
+
+    def _draw_menu(self):
+        if hasattr(self.mlx, "mlx_string_put"):
+            y_pos = self.win_height - 30
+            self.mlx.mlx_string_put(
+                self.mlx_ptr, self.win, 10, y_pos, 0xFFFFFF,
+                "1:new maze  2:show path  3:random colour  ESC:exit"
+            )
 
     def render(self) -> None:
         self._fill_rect(0, 0, self.win_width, self.win_height, COLOR_BG)
@@ -92,6 +85,7 @@ class MazeVisualizer(Renderer):
         self.mlx.mlx_put_image_to_window(
             self.mlx_ptr, self.win, self.img, 0, 0
         )
+        self._draw_menu()
 
     def _draw_cell(self, x: int, y: int) -> None:
 
