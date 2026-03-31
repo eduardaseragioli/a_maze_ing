@@ -17,7 +17,7 @@ def main() -> None:
         generator = MazeGenerator(config)
         generator.generate()
         generator.write_output()
-        
+
         visualizer = MazeVisualizer(generator)
         visualizer.run()
     except FileNotFoundError as e:

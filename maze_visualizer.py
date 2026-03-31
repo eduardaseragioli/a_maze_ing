@@ -3,6 +3,7 @@ import os
 from maze_generator import MazeGenerator
 from maze_config import MazeConfig
 from renderer import Renderer
+from maze_animator import MazeAnimator
 from constants import (
     NORTH, EAST, SOUTH, WEST,
     COLOR_BG, COLOR_FLOOR, COLOR_WALL, COLOR_PATH,
@@ -52,10 +53,13 @@ class MazeVisualizer(Renderer):
         self.bpp = addr_info[1]
         self.line_size = addr_info[2]
 
+        self.animator = MazeAnimator(self)
 
-    def _build_path_cells(self) -> set[tuple[int, int]]:
-        cells: set[tuple[int, int]] = set()
+    def _build_path_cells(self) -> list[tuple[int, int]]:
+        """Build ordered list of path cells (not a set)."""
+        cells: list[tuple[int, int]] = []
         cx, cy = self.gen.config.entry
+        cells.append((cx, cy))
 
         for letter in self.gen.solution_path:
             if letter not in DIRECTIONS_BY_LETTER:
@@ -63,7 +67,7 @@ class MazeVisualizer(Renderer):
             dx, dy = DIRECTIONS_BY_LETTER[letter]
             cx += dx
             cy += dy
-            cells.add((cx, cy))
+            cells.append((cx, cy))
 
         return cells
 
@@ -82,10 +86,43 @@ class MazeVisualizer(Renderer):
             for x in range(self.gen.width):
                 self._draw_cell(x, y)
 
+        if self.show_path:
+            self._draw_path_line()
+
         self.mlx.mlx_put_image_to_window(
             self.mlx_ptr, self.win, self.img, 0, 0
         )
         self._draw_menu()
+
+    def _draw_path_line(self) -> None:
+        line_thickness = max(2, self.tile_size // 6)
+        half = line_thickness // 2
+
+        for i in range(len(self.path_cells) - 1):
+            x1, y1 = self.path_cells[i]
+            x2, y2 = self.path_cells[i + 1]
+
+            cx1 = x1 * self.tile_size + self.tile_size // 2
+            cy1 = y1 * self.tile_size + self.tile_size // 2
+            cx2 = x2 * self.tile_size + self.tile_size // 2
+            cy2 = y2 * self.tile_size + self.tile_size // 2
+
+            if x1 == x2:
+                self._fill_rect(
+                    cx1 - half,
+                    min(cy1, cy2),
+                    line_thickness,
+                    abs(cy2 - cy1) + line_thickness,
+                    COLOR_PATH
+                )
+            else:
+                self._fill_rect(
+                    min(cx1, cx2),
+                    cy1 - half,
+                    abs(cx2 - cx1) + line_thickness,
+                    line_thickness,
+                    COLOR_PATH
+                )
 
     def _draw_cell(self, x: int, y: int) -> None:
 
@@ -97,8 +134,6 @@ class MazeVisualizer(Renderer):
             interior_color = COLOR_ENTRY
         elif (x, y) == self.gen.config.exit_coord:
             interior_color = COLOR_EXIT
-        elif self.show_path and (x, y) in self.path_cells:
-            interior_color = COLOR_PATH
         else:
             interior_color = COLOR_FLOOR
 
@@ -155,8 +190,17 @@ class MazeVisualizer(Renderer):
         elif keycode == 49:
             self._regenerate()
         elif keycode == 50:
-            self.show_path = not self.show_path
-            self.render()
+            if self.animator.path_animating:
+                self.animator.stop()
+                self.show_path = False
+                self.render()
+            elif self.show_path:
+                self.show_path = False
+                self.render()
+            else:
+                self.animator.start()
+            #self.show_path = not self.show_path
+            #self.render()
         elif keycode == 51:
             self.wall_color = self._random_color()
             self.render()
@@ -186,6 +230,8 @@ class MazeVisualizer(Renderer):
         self.path_cells = self._build_path_cells()
         self.show_path = False
 
+        self.animator.stop()
+
         self.render()
 
     def run(self) -> None:
@@ -193,5 +239,7 @@ class MazeVisualizer(Renderer):
 
         self.mlx.mlx_key_hook(self.win, self._on_key, None)
         self.mlx.mlx_hook(self.win, 17, 0, self._on_close, None)
+
+        self.mlx.mlx_loop_hook(self.mlx_ptr, self.animator.step, None)
 
         self.mlx.mlx_loop(self.mlx_ptr)
