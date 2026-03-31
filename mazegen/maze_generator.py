@@ -205,8 +205,4 @@ class MazeGenerator:
                 f"{self.config.exit_coord[0]},{self.config.exit_coord[1]}\n")
             file.write(f"{path_str}\n")
 
-    def display(self) -> None:
 
-        from maze_visualizer import MazeVisualizer
-        visualizer = MazeVisualizer(self)
-        visualizer.run()

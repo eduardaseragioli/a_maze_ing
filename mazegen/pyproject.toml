@@ -25,7 +25,7 @@ classifiers = [
 [project.optional-dependencies]
 dev = ["pytest", "mypy", "flake8"]
 
-[tool.setuptools.packages]
+[tool.setuptools.packages.find]
 where = ["."]
 include = ["mazegen*"]
 
