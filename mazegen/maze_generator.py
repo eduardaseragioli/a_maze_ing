@@ -204,5 +204,3 @@ class MazeGenerator:
             file.write(
                 f"{self.config.exit_coord[0]},{self.config.exit_coord[1]}\n")
             file.write(f"{path_str}\n")
-
-
