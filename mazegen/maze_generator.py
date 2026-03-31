@@ -1,7 +1,7 @@
 import random
 from collections import deque
-from maze_config import MazeConfig
-from constants import (
+from .maze_config import MazeConfig
+from .constants import (
     NORTH, EAST, SOUTH, WEST,
     OPPOSITE, DIRECTIONS, DIR_LETTER, PATTERN_42
 )
