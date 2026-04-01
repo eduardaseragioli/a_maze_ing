@@ -199,8 +199,6 @@ class MazeVisualizer(Renderer):
                 self.render()
             else:
                 self.animator.start()
-            #self.show_path = not self.show_path
-            #self.render()
         elif keycode == 51:
             self.wall_color = self._random_color()
             self.render()
