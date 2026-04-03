@@ -65,7 +65,7 @@ def parse_config(filepath: str) -> MazeConfig:
         raise ValueError("Entry must be in format x,y")
     x, y = entry_raw.split(",")
     try:
-        entry = (int(x), int(y))
+        entry: tuple[int, int] = (int(x), int(y))
     except ValueError:
         raise ValueError(f"ENTRY must be an integer, got: {entry_raw}")
     if entry[0] >= width or entry[1] >= height or entry[0] < 0 or entry[1] < 0:
@@ -83,7 +83,7 @@ def parse_config(filepath: str) -> MazeConfig:
         raise ValueError("Exit must be in format x,y")
     x, y = exit_raw.split(",")
     try:
-        exit_key = (int(x), int(y))
+        exit_key: tuple[int, int] = (int(x), int(y))
     except ValueError:
         raise ValueError(f"EXIT must be an integer, got: {exit_raw}")
     if (exit_key[0] >= width or exit_key[1] >= height or
@@ -101,6 +101,8 @@ def parse_config(filepath: str) -> MazeConfig:
         )
 
     output_file = raw["OUTPUT_FILE"]
+    if output_file != "maze.txt":
+        raise ValueError("The output name file is not correct")
 
     perfect_str = raw["PERFECT"].capitalize()
     if perfect_str not in ("True", "False"):

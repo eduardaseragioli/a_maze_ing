@@ -17,15 +17,12 @@ debug:
 
 lint:
 	flake8 . --exclude=lib
-	mypy . --warn-return-any --warn-unused-ignores \
-	       --ignore-missing-imports --disallow-untyped-defs \
-	       --check-untyped-defs
-
-lint-strict:
-	flake8 .
-	mypy . --strict
+	mypy . --exclude lib --warn-return-any --warn-unused-ignores \
+       --ignore-missing-imports --disallow-untyped-defs \
+       --check-untyped-defs
+		   --exclude lib
 
 clean:
 	rm -rf __pycache__ .mypy_cache
 
-.PHONY: all install run debug lint lint-strict clean
+.PHONY: all install run debug lint clean

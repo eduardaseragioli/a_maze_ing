@@ -1,11 +1,16 @@
+
 from constants import COLOR_PATH, COLOR_BG
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from maze_visualizer import MazeVisualizer
 
 
 class MazeAnimator:
     """Handles path animation for the maze visualizer."""
 
-    def __init__(self, visualizer: object) -> None:
-        self.vis = visualizer
+    def __init__(self, visualizer: "MazeVisualizer") -> None:
+        self.vis: "MazeVisualizer" = visualizer
         self.path_anim_index: int = 0
         self.path_animating: bool = False
         self.path_anim_frame: int = 0
@@ -42,7 +47,7 @@ class MazeAnimator:
 
     def _render_partial(self) -> None:
         """Render maze with path drawn up to current animation index."""
-        vis = self.vis
+        vis: "MazeVisualizer" = self.vis
         vis._fill_rect(0, 0, vis.win_width, vis.win_height, COLOR_BG)
 
         for y in range(vis.gen.height):
@@ -58,9 +63,9 @@ class MazeAnimator:
 
     def _draw_path_line_partial(self, up_to: int) -> None:
         """Draw path line only up to a given index."""
-        vis = self.vis
-        line_thickness = max(2, vis.tile_size // 6)
-        half = line_thickness // 2
+        vis: "MazeVisualizer" = self.vis
+        line_thickness: int = max(2, vis.tile_size // 6)
+        half: int = line_thickness // 2
 
         for i in range(min(up_to, len(vis.path_cells) - 1)):
             x1, y1 = vis.path_cells[i]

@@ -41,7 +41,7 @@ class MazeGenerator:
             self.blocked_cells.add((x, y))
         return True
 
-    def remove_wall(self, x, y, direction) -> None:
+    def remove_wall(self, x: int, y: int, direction: int) -> None:
 
         if (x < 0 or x >= self.width or y < 0 or y >= self.height):
             return
@@ -102,7 +102,14 @@ class MazeGenerator:
         if not self.config.perfect:
             self._open_extra_walls()
 
-    def _is_valid_open(self, cx, cy, nx, ny, visited) -> bool:
+    def _is_valid_open(
+        self,
+        cx: int,
+        cy: int,
+        nx: int,
+        ny: int,
+        visited: set[tuple[int, int]]
+    ) -> bool:
 
         open_neighbors = 0
 
@@ -159,7 +166,9 @@ class MazeGenerator:
 
     def _bfs_shortest_path(self) -> list[str]:
 
-        queue = deque([(self.config.entry, [])])
+        queue: deque[tuple[tuple[int, int], list[str]]] = deque([
+            (self.config.entry, [])
+        ])
         visited = {self.config.entry}
 
         while queue:

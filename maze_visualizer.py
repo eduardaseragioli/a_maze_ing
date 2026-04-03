@@ -71,7 +71,7 @@ class MazeVisualizer(Renderer):
 
         return cells
 
-    def _draw_menu(self):
+    def _draw_menu(self) -> None:
         if hasattr(self.mlx, "mlx_string_put"):
             y_pos = self.win_height - 30
             self.mlx.mlx_string_put(
@@ -184,7 +184,7 @@ class MazeVisualizer(Renderer):
                 self.wall_color,
             )
 
-    def _on_key(self, keycode: int, param) -> int:
+    def _on_key(self, keycode: int, param: object) -> int:
         if keycode == 65307:
             os._exit(0)
         elif keycode == 49:
@@ -205,7 +205,7 @@ class MazeVisualizer(Renderer):
 
         return 0
 
-    def _on_close(self, param) -> int:
+    def _on_close(self, param: object) -> int:
         os._exit(0)
 
     def _regenerate(self) -> None:

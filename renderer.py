@@ -3,6 +3,14 @@ import random
 
 class Renderer:
 
+    def __init__(self) -> None:
+        self.win_width: int = 0
+        self.win_height: int = 0
+        self.bpp: int = 32
+        self.line_size: int = 0
+        self.img_data: bytearray = bytearray()
+        self.tile_size: int = 0
+
     def _fill_rect(
         self,
         x_px: int,

@@ -5,20 +5,20 @@ from maze_visualizer import MazeVisualizer
 
 
 def main() -> None:
-    args = sys.argv
+    args: list[str] = sys.argv
     if len(args) != 2:
         print("Usage: python3 a_maze_ing.py config.txt")
         sys.exit(1)
 
-    file_path = sys.argv[1]
+    file_path: str = sys.argv[1]
 
     try:
         config = parse_config(file_path)
-        generator = MazeGenerator(config)
+        generator: MazeGenerator = MazeGenerator(config)
         generator.generate()
         generator.write_output()
 
-        visualizer = MazeVisualizer(generator)
+        visualizer: MazeVisualizer = MazeVisualizer(generator)
         visualizer.run()
     except FileNotFoundError as e:
         print(f"Error: {e}")

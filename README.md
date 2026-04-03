@@ -110,14 +110,17 @@ Validation rules:
 
 ## Maze Generation Algorithm
 
-Chosen algorithm: randomized depth-first search (recursive backtracker behavior with an explicit stack).
 
-### Why this algorithm
+The project uses two classic algorithms:
 
-- Simple and reliable to implement.
-- Naturally produces coherent corridors.
-- Easy to enforce perfect maze mode (single connected spanning-tree behavior).
-- Works well with deterministic randomness using a seed.
+- **Randomized Depth-First Search (DFS):** Used for maze generation (recursive backtracker behavior with an explicit stack).
+- **Breadth-First Search (BFS):** Used to find the shortest valid path from entry to exit after the maze is generated.
+
+### Why these algorithms?
+
+- DFS is simple, reliable, and naturally produces perfect mazes (a single solution between entry and exit).
+- BFS guarantees that the displayed path is truly the shortest possible, even in large or complex mazes.
+- Both are easy to control with a random seed for reproducibility.
 
 ### Coherence guarantees
 
@@ -231,6 +234,8 @@ All sources and build metadata required to rebuild the package must be present i
 
 ### Team roles
 
+We use the pair programming method, where two people work together on the entire project, both for the front-end and the back-end.
+
 This repository is currently maintained by two contributor:
 
 - dseragio: parser, generation logic, validation, output format, README, packaging preparation.
@@ -302,8 +307,8 @@ Classic references:
 - typing module: https://docs.python.org/3/library/typing.html
 - mypy docs: https://mypy.readthedocs.io/
 - flake8 docs: https://flake8.pycqa.org/
-- Maze generation overview: https://en.wikipedia.org/wiki/Maze_generation_algorithm
-- Depth-first search: https://en.wikipedia.org/wiki/Depth-first_search
+- Maze generation overview: https://medium.com/analytics-vidhya/maze-generations-algorithms-and-visualizations-9f5e88a3ae37
+- Depth-first search: https://www.geeksforgeeks.org/dsa/depth-first-search-or-dfs-for-a-graph/
 
 ## Submission and Evaluation Readiness
 
