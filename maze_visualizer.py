@@ -184,6 +184,61 @@ class MazeVisualizer(Renderer):
                 self.wall_color,
             )
 
+    def _draw_cell_with_alpha(self, x: int, y: int, alpha: float) -> None:
+        """Draw a cell with alpha blending for fade-in effect."""
+        cell_val = self.gen.grid[y][x]
+        if (x, y) in self.gen.blocked_cells:
+            interior_color = COLOR_42
+        elif (x, y) == self.gen.config.entry:
+            interior_color = COLOR_ENTRY
+        elif (x, y) == self.gen.config.exit_coord:
+            interior_color = COLOR_EXIT
+        else:
+            interior_color = COLOR_FLOOR
+        blended_interior = self._blend_color(interior_color, alpha)
+        blended_wall = self._blend_color(self.wall_color, alpha)
+        interior_margin = 2
+        self._fill_rect(
+            x * self.tile_size + interior_margin,
+            y * self.tile_size + interior_margin,
+            self.tile_size - interior_margin * 2,
+            self.tile_size - interior_margin * 2,
+            blended_interior,
+        )
+        wall_thickness = 1
+        if cell_val & NORTH:
+            self._fill_rect(
+                x * self.tile_size,
+                y * self.tile_size,
+                self.tile_size,
+                wall_thickness,
+                blended_wall,
+            )
+        if cell_val & SOUTH:
+            self._fill_rect(
+                x * self.tile_size,
+                y * self.tile_size + self.tile_size - wall_thickness,
+                self.tile_size,
+                wall_thickness,
+                blended_wall,
+            )
+        if cell_val & WEST:
+            self._fill_rect(
+                x * self.tile_size,
+                y * self.tile_size,
+                wall_thickness,
+                self.tile_size,
+                blended_wall,
+            )
+        if cell_val & EAST:
+            self._fill_rect(
+                x * self.tile_size + self.tile_size - wall_thickness,
+                y * self.tile_size,
+                wall_thickness,
+                self.tile_size,
+                blended_wall,
+            )
+
     def _on_key(self, keycode: int, param: object) -> int:
         if keycode == 65307:
             os._exit(0)
@@ -229,7 +284,6 @@ class MazeVisualizer(Renderer):
         self.show_path = False
 
         self.animator.stop()
-
         self.render()
 
     def run(self) -> None:

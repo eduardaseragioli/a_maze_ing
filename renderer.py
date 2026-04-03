@@ -76,3 +76,10 @@ class Renderer:
     def _random_color(self) -> int:
 
         return random.randint(0, 0xFFFFFF)
+
+    def _blend_color(self, color: int, alpha: float) -> int:
+        """Blend a color with alpha transparency (0.0 to 1.0)."""
+        r = int((color & 0xFF) * alpha)
+        g = int(((color >> 8) & 0xFF) * alpha)
+        b = int(((color >> 16) & 0xFF) * alpha)
+        return (b << 16) | (g << 8) | r
