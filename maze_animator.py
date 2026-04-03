@@ -6,7 +6,6 @@ if TYPE_CHECKING:
     from maze_visualizer import MazeVisualizer
 
 
-
 class MazeAnimator:
     """Handles path animation for the maze visualizer."""
 
@@ -19,6 +18,12 @@ class MazeAnimator:
         self.blink_state: bool = True
         self.blink_counter: int = 0
         self.blink_interval: int = 20
+        # Fade-in animation state
+        self.fade_animating: bool = False
+        self.fade_frame: int = 0
+        self.fade_speed: int = 2  # frames per alpha step
+        self.fade_alpha: float = 0.0
+        self.fade_duration: int = 60  # total frames for fade-in
 
     def start(self) -> None:
         """Start the path animation from the beginning."""
@@ -32,6 +37,16 @@ class MazeAnimator:
         self.path_anim_index = 0
         self.path_anim_frame = 0
 
+    def start_fade_in(self) -> None:
+        """Start the fade-in animation for a new maze."""
+        self.fade_animating = True
+        self.fade_frame = 0
+        self.fade_alpha = 0.0
+
+    def stop_fade_in(self) -> None:
+        """Stop the fade-in animation."""
+        self.fade_animating = False
+        self.fade_alpha = 1.0
 
     def step(self, param: object) -> int:
         """Advance animation by one step. Called every MLX loop tick."""
@@ -40,6 +55,19 @@ class MazeAnimator:
         if self.blink_counter >= self.blink_interval:
             self.blink_counter = 0
             self.blink_state = not self.blink_state
+
+        # Handle fade-in animation
+        if self.fade_animating:
+            self.fade_frame += 1
+            if self.fade_frame >= self.fade_speed:
+                self.fade_frame = 0
+                step_value = 1.0 / (self.fade_duration // self.fade_speed)
+                self.fade_alpha += step_value
+                if self.fade_alpha >= 1.0:
+                    self.fade_alpha = 1.0
+                    self.fade_animating = False
+            self._render_fade()
+            return 0
 
         if not self.path_animating:
             # Mesmo parado, renderiza o piscar
@@ -56,9 +84,21 @@ class MazeAnimator:
             self.path_anim_index += 1
             self._render_partial()
 
-
         return 0
 
+    def _render_fade(self) -> None:
+        """Render maze with fade-in effect."""
+        vis: "MazeVisualizer" = self.vis
+        vis._fill_rect(0, 0, vis.win_width, vis.win_height, COLOR_BG)
+
+        for y in range(vis.gen.height):
+            for x in range(vis.gen.width):
+                vis._draw_cell_with_alpha(x, y, self.fade_alpha)
+
+        vis.mlx.mlx_put_image_to_window(
+            vis.mlx_ptr, vis.win, vis.img, 0, 0
+        )
+        vis._draw_menu()
 
     def _render_partial(self) -> None:
         """Render maze with path drawn up to current animation index."""
@@ -88,7 +128,6 @@ class MazeAnimator:
                 vis.tile_size - margin * 2,
                 0x460000
             )
-
 
         self._draw_path_line_partial(self.path_anim_index)
 

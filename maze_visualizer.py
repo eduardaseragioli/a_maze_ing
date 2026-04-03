@@ -284,7 +284,7 @@ class MazeVisualizer(Renderer):
         self.show_path = False
 
         self.animator.stop()
-        self.render()
+        self.animator.start_fade_in()
 
     def run(self) -> None:
         self.render()
