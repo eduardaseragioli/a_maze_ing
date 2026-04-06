@@ -35,10 +35,15 @@ class MazeVisualizer(Renderer):
         self.mlx = Mlx()
         self.mlx_ptr = self.mlx.mlx_init()
         MENU_HEIGHT = 40
+        TITLE_HEIGHT = 40
         self.tile_size = TILE_SIZE
         self.win_width = self.gen.width * self.tile_size
 
-        self.win_height = self.gen.height * self.tile_size + MENU_HEIGHT
+        self.win_height = (
+            self.gen.height * self.tile_size
+            + MENU_HEIGHT
+            + TITLE_HEIGHT
+        )
 
         self.win = self.mlx.mlx_new_window(
             self.mlx_ptr, self.win_width, self.win_height, "A-Maze-ing"
@@ -73,6 +78,13 @@ class MazeVisualizer(Renderer):
 
     def _draw_menu(self) -> None:
         if hasattr(self.mlx, "mlx_string_put"):
+            title = "A-MAZE-ING"
+            title_x = self.win_width // 2 - (len(title) * 10) // 2
+            title_y = self.win_height - 70
+            self.mlx.mlx_string_put(
+                self.mlx_ptr, self.win, title_x, title_y, 0xFFD700, title
+            )
+
             y_pos = self.win_height - 30
             self.mlx.mlx_string_put(
                 self.mlx_ptr, self.win, 10, y_pos, 0xFFFFFF,
@@ -90,7 +102,7 @@ class MazeVisualizer(Renderer):
             self._draw_path_line()
 
         self.mlx.mlx_put_image_to_window(
-            self.mlx_ptr, self.win, self.img, 0, 0
+            self.mlx_ptr, self.win, self.img, 0, 40
         )
         self._draw_menu()
 
