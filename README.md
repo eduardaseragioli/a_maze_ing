@@ -4,10 +4,14 @@
 
 ## Description
 
-A-Maze-ing is a Python maze generator project.
-Its goal is to read a configuration file, generate a coherent random maze, optionally enforce perfect-maze behavior, and export the result in a hexadecimal wall format.
+<div style="float: right; margin-left: 1px;">
+  <img align="right" src="https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMmplZHQ0YjllZHQ3N3ZkOXU4aDIzaW40N2RsbnRxMjJnMnExNHM5eiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ACLCA6bvwBEvC/giphy.gif" width="280">
+</div>
 
-This project also includes a visual representation of the maze and a reusable generation module intended to be packaged and reused in future projects.
+A-Maze-ing is a Python maze generator project. Its goal is to read <br> a configuration file, generate a coherent random maze, optionally <br> enforce perfect-maze behavior, and export the result in a hexadecimal <br> wall format.
+
+This project also includes a visual representation of the maze and a <br> reusable generation module intended to be packaged and reused in <br> future projects.
+
 
 Core goals from the subject:
 
@@ -17,14 +21,6 @@ Core goals from the subject:
 - Support entry/exit and shortest-path extraction.
 - Write output in the required file format.
 - Provide visual rendering and basic interactions.
-
-## Instructions
-
-### Requirements
-
-- Python 3.10+
-- flake8
-- mypy
 
 ### Run
 
@@ -242,34 +238,6 @@ This repository is currently maintained by two contributor:
 
 - eseragio: parser, generation logic, validation, output format, README, packaging preparation.
 
-### Planning (initial vs actual)
-
-Initial plan:
-
-1. Config parser and error handling.
-2. Core generator and wall coherence.
-3. Perfect mode and shortest path.
-4. Output format and rendering.
-5. Packaging and documentation.
-
-Actual evolution:
-
-1. Parser and validation were implemented first.
-2. Grid and wall operations were iterated and corrected.
-3. "42" pattern integration was added early for constraint compliance.
-4. Remaining focus moved to complete generation flow, path extraction, and packaging checks.
-
-### What worked well
-
-- Clear separation between config parsing and generation.
-- Bitmask wall model is compact and consistent.
-- Seeded randomness improves reproducibility and debugging.
-
-### What can be improved
-
-- Expand automated tests for edge cases and tiny mazes.
-- Add stricter static typing coverage across all modules.
-- Improve visualization options and user interaction ergonomics.
 
 ### Tools used
 
@@ -279,39 +247,3 @@ Actual evolution:
 - Makefile
 - Git/GitHub
 - AI assistant (for explanation drafting, refactoring suggestions, and documentation polishing)
-
-## AI Usage (Required Transparency)
-
-AI was used for:
-
-- organizing the project workflow by splitting tasks across days,
-- checking whether variable names were clear and correctly used,
-- improving understanding of how MLX could be used in the project.
-
-AI was not used as blind copy-paste.
-All generated suggestions were reviewed, adapted, and validated manually.
-
-## Additional Guidelines Followed
-
-- .gitignore includes Python artifacts and cache folders.
-- Context managers are used for file operations.
-- Small test programs are used locally for behavior checks (not graded artifacts).
-
-## Resources
-
-Classic references:
-
-- Python documentation: https://docs.python.org/3/
-- PEP 8: https://peps.python.org/pep-0008/
-- PEP 257: https://peps.python.org/pep-0257/
-- typing module: https://docs.python.org/3/library/typing.html
-- mypy docs: https://mypy.readthedocs.io/
-- flake8 docs: https://flake8.pycqa.org/
-- Maze generation overview: https://medium.com/analytics-vidhya/maze-generations-algorithms-and-visualizations-9f5e88a3ae37
-- Depth-first search: https://www.geeksforgeeks.org/dsa/depth-first-search-or-dfs-for-a-graph/
-
-## Submission and Evaluation Readiness
-
-- All mandatory files are kept inside the repository.
-- The project is prepared for peer-evaluation and quick live modifications.
-- The implementation choices can be explained and justified during defense.
